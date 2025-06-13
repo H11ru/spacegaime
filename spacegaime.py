@@ -860,6 +860,7 @@ def grid_pos_has_block(grid_x, grid_y, rects):
 camera = fcamera # for now
 emptimer = 0
 running = True
+times = [10] # placeholder
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -904,6 +905,20 @@ while running:
     # Holding F12 to go super speed
     if keys[pygame.K_F12]:
         MOVEMENT_SPEED *= 999
+
+    if keys[pygame.K_F4]:
+        # BRR!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        emp_timer = 999
+    
+    if keys[pygame.K_F9]:
+        # places random blocks on the screen
+        rects.clear()
+        for zx in range(-30, 31):
+            for zy in range(-20, 21):
+                if random.randint(0, 1) == 0:
+                    rects.append({'x': zx, 'y': zy})
+        # cache invalidation
+        neighborscache.clear()
 
     if keys[pygame.K_w]:
         fcamera['ty'] -= MOVEMENT_SPEED
@@ -1036,7 +1051,9 @@ while running:
     lenghte = len(rects_srooted)
     curent = 0
     for rect in rects_srooted:
-        if rect["x"] < 0 or rect["y"] < 0 or rect["x"] >= REPEAT_HIDER * WINDOW_SIZE[0] or rect["y"] >= REPEAT_HIDER * WINDOW_SIZE[1]:
+        # IF far offscreen, skip
+        if (rect['x'] < camera['x'] - 6 * TILE_SIZE or rect['x'] > camera['x'] + WINDOW_SIZE[0] + 6 * TILE_SIZE or
+            rect['y'] < camera['y'] - 6 * TILE_SIZE or rect['y'] > camera['y'] + WINDOW_SIZE[1] + 6 * TILE_SIZE): # Large safety buffer
             continue
         if not (rect['x'], rect['y']) in neighborscache:
             neighbors = {}
@@ -1293,8 +1310,8 @@ while running:
         # Blit the zoomed surface to the screen
         screen.blit(zoomed_surf, (0, 0))
 
-
+    screen.blit(founte.render("FPS: " + str(round(sum(times)/len(times))), True, (255, 255, 255)), (10, 10));times = times[max(0, len(times)-59):] + [(1000 / clock.tick(60))]
+    #print(times)
     pygame.display.flip()
-    clock.tick(60)
 
 pygame.quit()
