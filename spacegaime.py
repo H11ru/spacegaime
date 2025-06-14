@@ -8,7 +8,7 @@
 import pygame
 import math
 import random
-import numpy as np  # For matrix operations
+import numpy as np # For matrix operations
 
 
 triangular_magic = 25872391 # ???
@@ -25,7 +25,7 @@ MOVEMENT_SPEED_NORM = 5
 MOVEMENT_SPEED_FAST = 2
 MOVEMENT_SPEED_DBUG = 6
 MOVEMENT_SPEED_SLOW = 0.25
-RETURN_SPEED = 0.1  # Higher value = faster return to origin
+RETURN_SPEED = 0.1 # Higher value = faster return to origin
 MIN_DISTANCE = 1e-7
 
 # Setup display
@@ -36,8 +36,8 @@ clock = pygame.time.Clock()
 fcamera = {
     'x': 0,
     'y': 0,
-    'tx': 0,  # Target x position
-    'ty': 0,  # Target y position
+    'tx': 0, # Target x position
+    'ty': 0, # Target y position
 }
 
 stars = [] # ((color, color, color), x, y, distance, size multiplier)
@@ -49,49 +49,49 @@ STAR_TYPES = {
     'white_dwarf': {
         'count': 15,
         'color': (255, 255, 255),
-        'distance_range': (195, 375),  # Multiplied by 15
+        'distance_range': (195, 375), # Multiplied by 15
         'size_range': (0.1, 0.2)
     },
     'red_dwarf': {
         'count': 20,
         'color': (255, 160, 160),
-        'distance_range': (180, 330),  # Multiplied by 15
+        'distance_range': (180, 330), # Multiplied by 15
         'size_range': (0.1, 0.15)
     },
     'blue_giant': {
         'count': 3,
         'color': (150, 170, 255),
-        'distance_range': (210, 600),  # Multiplied by 15
+        'distance_range': (210, 600), # Multiplied by 15
         'size_range': (0.5, 0.7)
     },
     'red_giant': {
         'count': 4,
         'color': (255, 100, 100),
-        'distance_range': (225, 570),  # Multiplied by 15
+        'distance_range': (225, 570), # Multiplied by 15
         'size_range': (0.4, 0.6)
     },
     'yellow_star': {
         'count': 12,
         'color': (255, 255, 180),
-        'distance_range': (195, 360),  # Multiplied by 15
+        'distance_range': (195, 360), # Multiplied by 15
         'size_range': (0.2, 0.3)
     },
     'orange_star': {
         'count': 8,
         'color': (255, 200, 120),
-        'distance_range': (210, 390),  # Multiplied by 15
+        'distance_range': (210, 390), # Multiplied by 15
         'size_range': (0.25, 0.35)
     },
     'neutron_star': {
         'count': 2,
         'color': (200, 200, 255),
-        'distance_range': (270, 675),  # Multiplied by 15
+        'distance_range': (270, 675), # Multiplied by 15
         'size_range': (0.15, 0.2)
     },
     'binary_star': {
         'count': 1,
         'color': (255, 230, 180),
-        'distance_range': (90, 300),  # Multiplied by 15
+        'distance_range': (90, 300), # Multiplied by 15
         'size_range': (0.3, 0.4)
     }
 }
@@ -110,8 +110,8 @@ for star_type in STAR_TYPES.values():
 STAR_TYPES['black_hole'] = {
     'count': 1,
     'color': (0, 0, 0),
-    'distance_range': (90, 135),  # Multiplied by 15
-    'size_range': (0.1, 0.2),  # Larger size for black holes
+    'distance_range': (90, 135), # Multiplied by 15
+    'size_range': (0.1, 0.2), # Larger size for black holes
     'one': 1
 
 }
@@ -155,15 +155,15 @@ for star_type, config in STAR_TYPES.items():
     stars.extend(generate_stars(config, REPEAT_HIDER))
 
 # Sort all stars by distance
-stars.sort(key=lambda star: star[3])  # Sort by distance
+stars.sort(key=lambda star: star[3]) # Sort by distance
 # Except...
 # Move all black holes to the front
 # EFfect:  make all stars N times fautehr
 # chang eeahcx star to be 2x further away by multiplying distance by THINGIE
 #stars = [(star[0], star[1] * THINGIE, star[2] * THINGIE, star[3] * THINGIE, star[4]) for star in stars] # remember, star[0] is color, star[1] is x, star[2] is y, star[3] is distance, star[4] is size multiplier
-#black_holes = [star for star in stars if len(star) == 6]  # Black holes have 6 elements
-#stars = [star for star in stars if len(star) < 6]  # Remove black holes from the main list
-#stars = stars + black_holes  # Append black holes at the end so they render last -- on top
+#black_holes = [star for star in stars if len(star) == 6] # Black holes have 6 elements
+#stars = [star for star in stars if len(star) < 6] # Remove black holes from the main list
+#stars = stars + black_holes # Append black holes at the end so they render last -- on top
 
 # add the sun (its very close (like 0.2) and beeger)
 # REmember: color, x, y, distance, size_multiplier
@@ -202,8 +202,8 @@ for bstar in range(popped['count'] * REPEAT_HIDER ** 2):
     true_y = field_y * distance
     
     # SPECIAL BIT: generate its pair, at a random angle from the first star, and a random distance (40 - 60 px in that direction)
-    angle = random.uniform(0, 2 * math.pi)  # Random angle in radians
-    pair_distance = random.uniform(40, 60)  # Random distance for the pair
+    angle = random.uniform(0, 2 * math.pi) # Random angle in radians
+    pair_distance = random.uniform(40, 60) # Random distance for the pair
     pair_x = true_x + pair_distance * math.cos(angle)
     pair_y = true_y + pair_distance * math.sin(angle)
     # Add both stars to the list
@@ -235,7 +235,7 @@ bg_width = REPEAT_HIDER * WINDOW_SIZE[0]
 bg_height = REPEAT_HIDER * WINDOW_SIZE[1]
 bg = pygame.Surface((bg_width, bg_height))
 
-OVERRIDE_PARALLAX = False  # Set to True to disable parallax effect for testing
+OVERRIDE_PARALLAX = False # Set to True to disable parallax effect for testing
 
 def parallax_stars(screen, camera):
     for star in stars:
@@ -258,13 +258,13 @@ def parallax_stars(screen, camera):
             
             # Draw accretion disk with proper brightness (brighter near center)
             disk_surf = pygame.Surface((bh_size * 2, bh_size * 2), pygame.SRCALPHA)
-            disk_inner = pygame.draw.ellipse(disk_surf, (255, 255, 200, 200),  # Hot white-yellow
+            disk_inner = pygame.draw.ellipse(disk_surf, (255, 255, 200, 200), # Hot white-yellow
                                           (bh_size - base_rad * 1.5, bh_size - base_rad * 0.4,
                                            base_rad * 3, base_rad * 0.8))
-            disk_middle = pygame.draw.ellipse(disk_surf, (255, 150, 0, 160),  # Orange
+            disk_middle = pygame.draw.ellipse(disk_surf, (255, 150, 0, 160), # Orange
                                           (bh_size - base_rad * 2, bh_size - base_rad * 0.5,
                                            base_rad * 4, base_rad))
-            disk_outer = pygame.draw.ellipse(disk_surf, (200, 50, 0, 100),  # Dark red
+            disk_outer = pygame.draw.ellipse(disk_surf, (200, 50, 0, 100), # Dark red
                                           (bh_size - base_rad * 2.5, bh_size - base_rad * 0.6,
                                            base_rad * 5, base_rad * 1.2))
                                            
@@ -309,7 +309,7 @@ def parallax_stars(screen, camera):
         parallax_y = (y - camera['y']) / (distance if not OVERRIDE_PARALLAX else 1)
         # The sun is special in that it does not wrap around
         # Wrap around the repeat hider texture
-        if color == (247, 238, 15) or color == (82, 164, 199):  # Sun color specifically (no other stars are this color)
+        if color == (247, 238, 15) or color == (82, 164, 199): # Sun color specifically (no other stars are this color)
             wrapped_x = parallax_x - 50 # directly
             wrapped_y = parallax_y - 50
         else:
@@ -318,7 +318,7 @@ def parallax_stars(screen, camera):
             wrapped_y = parallax_y % (REPEAT_HIDER * WINDOW_SIZE[1]) - 50
         # this means if you fly off, it will never appear again unless go go back to the origin
         # Draw the star
-        rad = int((TILE_SIZE * (size_multiplier / distance)) * (15 if not color in [(247, 238, 15),(82, 164, 199)] else 3))  # Make the sun bigger
+        rad = int((TILE_SIZE * (size_multiplier / distance)) * (15 if not color in [(247, 238, 15),(82, 164, 199)] else 3)) # Make the sun bigger
         if rad < 2:
             # LQ
             pygame.draw.circle(screen, color, (int(wrapped_x), int(wrapped_y)), rad)
@@ -328,7 +328,7 @@ def parallax_stars(screen, camera):
             # then a 0.7x scale full opacity circle
             
             beeg_surf = pygame.Surface((rad * 4, rad * 4), pygame.SRCALPHA)
-            beeg_surf.fill((0, 0, 0, 0))  # Transparent background
+            beeg_surf.fill((0, 0, 0, 0)) # Transparent background
             # Draw the larger circle with 50% opacity
             pygame.draw.circle(beeg_surf, (*color, 128), (2*rad, 2*rad), int(rad * 1.4))
             # Draw the smaller circle with full opacity
@@ -339,7 +339,7 @@ def parallax_stars(screen, camera):
             # Draw many circles with decreasing opacity using a for loop for bloom
             for i in range(3):
                 bloom_surf = pygame.Surface((rad * 7, rad * 7), pygame.SRCALPHA)
-                bloom_surf.fill((0, 0, 0, 0))  # Transparent background
+                bloom_surf.fill((0, 0, 0, 0)) # Transparent background
                 
                 # Calculate size and opacity for each bloom layer
                 layer_sizes = [rad * 2.5, rad * 2, rad * 1.5]
@@ -375,7 +375,7 @@ def parallax_stars(screen, camera):
             pygame.draw.circle(core_surf, clerp(color, (255, 255, 255), 0.5), (rad, rad), rad * 0.7)
             screen.blit(core_surf, (int(wrapped_x - rad), int(wrapped_y - rad)))
         # SUN RAY
-        if color == (247, 238, 15):  # Sun color specifically
+        if color == (247, 238, 15): # Sun color specifically
             """# DEBUG
             pygame.draw.line(screen, (255, 0, 255),
                 (WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] // 2),
@@ -424,7 +424,7 @@ def parallax_stars(screen, camera):
                     # Then randomly modify each variable directly
                     all_colors = [green1, green2, green3, green4, green5, green8, green9, green10, green11]
                     for i in range(len(all_colors)):
-                        if random.randint(0, 9) < 3:  # 30%
+                        if random.randint(0, 9) < 3: # 30%
                             all_colors[i] = (0, 255, 0)
                         elif random.randint(0, 6) < 4:
                             all_colors[i] = (255, 0, 0) 
@@ -437,7 +437,7 @@ def parallax_stars(screen, camera):
                     # Handle alpha colors separately
                     bopewfko = [green6_alpha, green7_alpha]
                     for alpha_color in bopewfko:
-                        if random.randint(0, 9) < 3:  # 30%
+                        if random.randint(0, 9) < 3: # 30%
                             alpha_color = (0, 255, 0, 128)
                         elif random.randint(0, 6) < 4:
                             alpha_color = (255, 0, 0, 128)
@@ -509,7 +509,7 @@ def parallax_stars(screen, camera):
             screen.blit(text, (wrapped_x - rad * 3, wrapped_y - rad * 2.5 - 20))
             # Transparant mesh
             box_shaped_surface = pygame.Surface((rad * 5, rad * 5), pygame.SRCALPHA)
-            box_shaped_surface.fill((0, 0, 0, 0))  # Transparent background
+            box_shaped_surface.fill((0, 0, 0, 0)) # Transparent background
             for verlines in range(0, rad * 5, 10):
                 # insert zero vars in fun places so critical eror causes distortions
                 pygame.draw.line(box_shaped_surface, green6_alpha, (verlines + zero, 0), (verlines + zero4, rad * 5), 1)
@@ -540,7 +540,7 @@ def parallax_stars(screen, camera):
                         pygame.draw.polygon(screen, (255, 0, 0), points, random.randint(1, 3))
             # End of sun ra
             continue
-        if color == (82, 164, 199):  # NH-4b color specifically
+        if color == (82, 164, 199): # NH-4b color specifically
             """# DEBUG
             pygame.draw.line(screen, (255, 0, 255),
                 (WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] // 2),
@@ -589,7 +589,7 @@ def parallax_stars(screen, camera):
                     # Then randomly modify each variable directly
                     all_colors = [green1, green2, green3, green4, green5, green8, green9, green10, green11]
                     for i in range(len(all_colors)):
-                        if random.randint(0, 9) < 3:  # 30%
+                        if random.randint(0, 9) < 3: # 30%
                             all_colors[i] = (0, 255, 0)
                         elif random.randint(0, 6) < 4:
                             all_colors[i] = (255, 0, 0) 
@@ -602,7 +602,7 @@ def parallax_stars(screen, camera):
                     # Handle alpha colors separately
                     bopewfko = [green6_alpha, green7_alpha]
                     for alpha_color in bopewfko:
-                        if random.randint(0, 9) < 3:  # 30%
+                        if random.randint(0, 9) < 3: # 30%
                             alpha_color = (0, 255, 0, 128)
                         elif random.randint(0, 6) < 4:
                             alpha_color = (255, 0, 0, 128)
@@ -674,7 +674,7 @@ def parallax_stars(screen, camera):
             screen.blit(text, (wrapped_x - rad * 3, wrapped_y - rad * 2.5 - 20))
             # Transparant mesh
             box_shaped_surface = pygame.Surface((rad * 5, rad * 5), pygame.SRCALPHA)
-            box_shaped_surface.fill((0, 0, 0, 0))  # Transparent background
+            box_shaped_surface.fill((0, 0, 0, 0)) # Transparent background
             for verlines in range(0, rad * 5, 10):
                 # insert zero vars in fun places so critical eror causes distortions
                 pygame.draw.line(box_shaped_surface, green6_alpha, (verlines + zero, 0), (verlines + zero4, rad * 5), 1)
@@ -725,21 +725,21 @@ def get_barycentric(px, py, p1, p2, p3):
     Returns (u,v,w) where u+v+w=1 and u,v,w are the weights for p1,p2,p3 respectively.
     """
     # Convert to vectors
-    v0 = (p2[0] - p1[0], p2[1] - p1[1])  # v0 = p2 - p1
-    v1 = (p3[0] - p1[0], p3[1] - p1[1])  # v1 = p3 - p1
+    v0 = (p2[0] - p1[0], p2[1] - p1[1]) # v0 = p2 - p1
+    v1 = (p3[0] - p1[0], p3[1] - p1[1]) # v1 = p3 - p1
     v2 = (px - p1[0], py - p1[1])        # v2 = p - p1
     
     # Calculate dot products
-    d00 = v0[0] * v0[0] + v0[1] * v0[1]  # dot(v0,v0)
-    d01 = v0[0] * v1[0] + v0[1] * v1[1]  # dot(v0,v1)
-    d11 = v1[0] * v1[0] + v1[1] * v1[1]  # dot(v1,v1)
-    d20 = v2[0] * v0[0] + v2[1] * v0[1]  # dot(v2,v0)
-    d21 = v2[0] * v1[0] + v2[1] * v1[1]  # dot(v2,v1)
+    d00 = v0[0] * v0[0] + v0[1] * v0[1] # dot(v0,v0)
+    d01 = v0[0] * v1[0] + v0[1] * v1[1] # dot(v0,v1)
+    d11 = v1[0] * v1[0] + v1[1] * v1[1] # dot(v1,v1)
+    d20 = v2[0] * v0[0] + v2[1] * v0[1] # dot(v2,v0)
+    d21 = v2[0] * v1[0] + v2[1] * v1[1] # dot(v2,v1)
     
     # Calculate barycentric coordinates
     denom = d00 * d11 - d01 * d01
-    if abs(denom) < 1e-7:  # Check for divide-by-zero
-        return (-1, -1, -1)  # Invalid result
+    if abs(denom) < 1e-7: # Check for divide-by-zero
+        return (-1, -1, -1) # Invalid result
         
     v = (d11 * d20 - d01 * d21) / denom
     w = (d00 * d21 - d01 * d20) / denom
@@ -784,7 +784,7 @@ def testdraw(surf, tex, quad_points):
             bary2 = get_barycentric(x, y, local_quad[0], local_quad[2], local_quad[3])
 
             # Process pixel if it's in either triangle
-            if min(bary1) >= -0.00001:  # First triangle
+            if min(bary1) >= -0.00001: # First triangle
                 a,b,c = bary1
                 # Correct UV interpolation
                 u = a*src_points[0][0] + b*src_points[1][0] + c*src_points[2][0]
@@ -800,7 +800,7 @@ def testdraw(surf, tex, quad_points):
                 color = tex.get_at((tex_x, tex_y))
                 temp.set_at((x, y), color)
                     
-            elif min(bary2) >= -0.00001:  # Second triangle
+            elif min(bary2) >= -0.00001: # Second triangle
                 a,b,c = bary2
                 # Correct UV interpolation for second triangle
                 u = a*src_points[0][0] + b*src_points[2][0] + c*src_points[3][0]
@@ -824,9 +824,20 @@ def testdraw(surf, tex, quad_points):
 
 # Rectangle storage
 rects = []
+
+# idea to speed up "does a rect exist here" checks: sets are really really  really fast
+# we can palce all the positions of rects in as et and then do hyper fast pos in rectsset checks
+rectsset = set()
 # Add initial rectangle at origin
-rects.append({'x': 24, 'y':  10})
-rects.append({'x': 24, 'y':  11})
+#rects.append({'x': 24, 'y':  10})
+#rects.append({'x': 24, 'y':  11})
+def _add_rect(x, y):
+    """Add a rectangle at the given grid position"""
+    rects.append({'x': x, 'y': y})
+    rectsset.add((x, y)) # Add to set for fast lookup
+# reimplement the hardcoded rects with add redct
+_add_rect(24, 10)
+_add_rect(24, 11)
 
 # TEST: 200 rectangles
 for tx in range(20):
@@ -835,10 +846,26 @@ for tx in range(20):
         x = tx 
         y = ty 
         # Add rectangle
-        rects.append({'x': x, 'y': y})
+        _add_rect(x, y)
 
-neighborscache = {}  # Cache for neighbor calculations so they dont lag
+neighborscache = {} # Cache for neighbor calculations so they dont lag
 
+def grid_pos_has_block(grid_x, grid_y, rects):
+    """Check if there's already a block at the given grid position"""
+    #return any(r['x'] == grid_x and r['y'] == grid_y for r in rects) # Old
+    return (grid_x, grid_y) in rectsset # New
+
+# test endgame space base: 8000 blocks
+while len(rects) < 8000:
+    print(f"Progressez: {len(rects)/80}%") if len(rects) % 1000 == 0 else None
+    # Randomly generate a position
+    grid_x = random.randint(-100, 100)
+    grid_y = random.randint(-50, 50)
+    
+    # Check if this position already has a block
+    if not grid_pos_has_block(grid_x, grid_y, rects):
+        #rects.append({'x': grid_x, 'y': grid_y})
+        _add_rect(grid_x, grid_y)
 
 
 def screen_to_grid(screen_x, screen_y, camera):
@@ -855,13 +882,15 @@ def screen_to_grid(screen_x, screen_y, camera):
 
 def grid_pos_has_block(grid_x, grid_y, rects):
     """Check if there's already a block at the given grid position"""
-    return any(r['x'] == grid_x and r['y'] == grid_y for r in rects)
+    #return any(r['x'] == grid_x and r['y'] == grid_y for r in rects)
+    return (grid_x, grid_y) in rectsset # Use the set for fast lookup
 
 camera = fcamera # for now
 emptimer = 0
 running = True
 times = [10] # placeholder
 while running:
+    keys = pygame.key.get_pressed()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -870,27 +899,45 @@ while running:
         emptimer = 73
     mouse_buttons = pygame.mouse.get_pressed()
     mouse_pos = list(pygame.mouse.get_pos())
-    mouse_pos[0] -= TILE_SIZE / 2  # Center the mouse on the tile
-    mouse_pos[1] -= TILE_SIZE / 2  # Center the mouse on the tile
+    mouse_pos[0] -= TILE_SIZE / 2 # Center the mouse on the tile
+    mouse_pos[1] -= TILE_SIZE / 2 # Center the mouse on the tile
     # Convert mouse position to grid coordinates
     grid_x, grid_y = screen_to_grid(mouse_pos[0], mouse_pos[1], camera)
     
-    # Left click to place blocks
-    if mouse_buttons[0]:  # Left mouse button
+    # Fix the cache invalidation in both click handlers by converting grid coords to pixel coords:
+
+# Left click handler:
+    if mouse_buttons[0]: # Left mouse button
         if not grid_pos_has_block(grid_x, grid_y, rects):
-            rects.append({'x': grid_x, 'y': grid_y})
-            # Clear the neighbors cache since we modified the world
-            neighborscache.clear()
-    
-    # Right click to destroy blocks
-    if mouse_buttons[2]:  # Right mouse button
+            #rects.append({'x': grid_x, 'y': grid_y})
+            _add_rect(grid_x, grid_y) # Use the new function to add rects
+            # Convert grid coordinates to pixel coordinates for cache invalidation
+            px = grid_x * TILE_SIZE
+            py = grid_y * TILE_SIZE
+            if (px, py) in neighborscache: del neighborscache[(px, py)]
+            if (px - TILE_SIZE, py) in neighborscache: del neighborscache[(px - TILE_SIZE, py)]
+            if (px + TILE_SIZE, py) in neighborscache: del neighborscache[(px + TILE_SIZE, py)]
+            if (px, py - TILE_SIZE) in neighborscache: del neighborscache[(px, py - TILE_SIZE)]
+            if (px, py + TILE_SIZE) in neighborscache: del neighborscache[(px, py + TILE_SIZE)]
+
+    # Right click handler:
+    if mouse_buttons[2]: # Right mouse button
         # Remove any blocks at this position
-        rects[:] = [r for r in rects if not (r['x'] == grid_x and r['y'] == grid_y)]
-        # Clear the neighbors cache since we modified the world
-        neighborscache.clear()
+        #rects[:] = [r for r in rects if not (r['x'] == grid_x and r['y'] == grid_y)]
+        if (grid_x, grid_y) in rectsset:
+            rectsset.remove((grid_x, grid_y))
+            # This is still expensive
+            rects[:] = [r for r in rects if not (r['x'] == grid_x and r['y'] == grid_y)]
+        # Convert grid coordinates to pixel coordinates for cache invalidation
+        px = grid_x * TILE_SIZE
+        py = grid_y * TILE_SIZE
+        if (px, py) in neighborscache: del neighborscache[(px, py)]
+        if (px - TILE_SIZE, py) in neighborscache: del neighborscache[(px - TILE_SIZE, py)]
+        if (px + TILE_SIZE, py) in neighborscache: del neighborscache[(px + TILE_SIZE, py)]
+        if (px, py - TILE_SIZE) in neighborscache: del neighborscache[(px, py - TILE_SIZE)]
+        if (px, py + TILE_SIZE) in neighborscache: del neighborscache[(px, py + TILE_SIZE)]
 
     # Handle input
-    keys = pygame.key.get_pressed()
     
     MOVEMENT_SPEED = MOVEMENT_SPEED_NORM
     if pygame.key.get_mods() & pygame.KMOD_CTRL:
@@ -910,7 +957,7 @@ while running:
         # BRR!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         emp_timer = 999
     
-    if keys[pygame.K_F9]:
+    if keys[pygame.K_F9]: 
         # places random blocks on the screen
         rects.clear()
         for zx in range(-30, 31):
@@ -951,9 +998,9 @@ while running:
     t_pose = (t_pose[0] % (REPEAT_HIDER * WINDOW_SIZE[0]), t_pose[1] % (REPEAT_HIDER * WINDOW_SIZE[1]))
     # Draw the background and loop it on the left, top, and left-top
     screen.blit(bg, t_pose)
-    screen.blit(bg, (t_pose[0] - bg_width, t_pose[1]))  # Left
-    screen.blit(bg, (t_pose[0], t_pose[1] - bg_height))  # Top
-    screen.blit(bg, (t_pose[0] - bg_width, t_pose[1] - bg_height))  # Top-Left
+    screen.blit(bg, (t_pose[0] - bg_width, t_pose[1])) # Left
+    screen.blit(bg, (t_pose[0], t_pose[1] - bg_height)) # Top
+    screen.blit(bg, (t_pose[0] - bg_width, t_pose[1] - bg_height)) # Top-Left
 
     
     def calculate_face_points(rect_points, type):
@@ -976,10 +1023,10 @@ while running:
         cam_y = round(camera['y'])
         
         base_points = [
-            (round(rect_x - cam_x), round(rect_y - cam_y)),  # topleft
-            (round(rect_x - cam_x + TILE_SIZE - 1), round(rect_y - cam_y)),  # topright
-            (round(rect_x - cam_x), round(rect_y - cam_y + TILE_SIZE - 1)),  # bottomleft
-            (round(rect_x - cam_x + TILE_SIZE - 1), round(rect_y - cam_y + TILE_SIZE - 1))  # bottomright
+            (round(rect_x - cam_x), round(rect_y - cam_y)), # topleft
+            (round(rect_x - cam_x + TILE_SIZE - 1), round(rect_y - cam_y)), # topright
+            (round(rect_x - cam_x), round(rect_y - cam_y + TILE_SIZE - 1)), # bottomleft
+            (round(rect_x - cam_x + TILE_SIZE - 1), round(rect_y - cam_y + TILE_SIZE - 1)) # bottomright
         ]
         
         middle = (WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] // 2)
@@ -1008,7 +1055,7 @@ while running:
             face_points = calculate_face_points(points, face_type)
             if face_points:
                 pygame.draw.polygon(screen, colors[face_type], face_points)
-                #pygame.draw.polygon(screen, (0, 0, 0), face_points,2)  # Draw outline to hide the horrible seams
+                #pygame.draw.polygon(screen, (0, 0, 0), face_points,2) # Draw outline to hide the horrible seams
                 # OH no... the shrink isnt gonna be that easy here...
                 # HOW DO WE SHRINK. THE POLY
                 # we need to pull each point towards the center of the face by 1 px
@@ -1025,15 +1072,18 @@ while running:
                     face_points[i] = (face_points[i][0] - vec[0], face_points[i][1] - vec[1])
 
                 # draw outline
-                pygame.draw.polygon(screen, nonrueguwh997h3qHARHHohfow, face_points,5)  # Draw outline to hide the horrible seams
+                pygame.draw.polygon(screen, nonrueguwh997h3qHARHHohfow, face_points,5) # Draw outline to hide the horrible seams
 
 
     # Pause tool
-    if pygame.key.get_pressed()[pygame.K_F10]:
+    if keys[pygame.K_F10]:
         # COMPLETELY pause
-        while pygame.key.get_pressed()[pygame.K_F10]:
+        while keys[pygame.K_F10]:
             for event in pygame.event.get(pygame.QUIT):
                 running = False
+    if keys[pygame.K_F11]:
+        # reload cache
+        neighborscache.clear()
             
 
 
@@ -1042,18 +1092,44 @@ while running:
     # Sroot rects by distance to center of screen
     # OPTIMIZATION: dont sqrt, as comparison doesnt care about whther its squared or actual distance
     # /!\rects now uses grids, not pixels
-    # so convert first
-    breckts = [{'x': r['x'] * TILE_SIZE, 'y': r['y'] * TILE_SIZE} for r in rects]
-    # Sort rectangles by distance to camera center
-    rects_srooted = sorted(breckts, key=lambda r: ((r['x'] - (camera['x'] + WINDOW_SIZE[0]//2 - TILE_SIZE // 2))**2 + (r['y'] - (camera['y'] + WINDOW_SIZE[1]//2 - TILE_SIZE // 2))**2), reverse=True)
-    # Fix annoying bug
-    rects_srooted = __import__("copy").deepcopy(rects_srooted)  # This is a hack to fix the bug where rects_srooted gets modified in place, causing issues with rendering order
+
+    # POSITION ONE
+
+
+    # Cache camera position and calculate camera center once
+    camera_center_x = camera['x'] + WINDOW_SIZE[0]//2 - TILE_SIZE // 2
+    camera_center_y = camera['y'] + WINDOW_SIZE[1]//2 - TILE_SIZE // 2
+    camera_pos = (camera['x'], camera['y'])
+
+    # Only resort if camera moved
+    if camera_pos != getattr(get_rect_points, 'last_camera_pos', None):
+        visible_blocks = []
+        for rect in rects:
+            px = rect['x'] * TILE_SIZE
+            py = rect['y'] * TILE_SIZE
+            if (px < camera['x'] - 6 * TILE_SIZE or 
+                px > camera['x'] + WINDOW_SIZE[0] + 6 * TILE_SIZE or
+                py < camera['y'] - 6 * TILE_SIZE or 
+                py > camera['y'] + WINDOW_SIZE[1] + 6 * TILE_SIZE):
+                continue
+            visible_blocks.append({'x': px, 'y': py})
+        
+        # Sort only visible blocks
+        rects_srooted = sorted(visible_blocks, 
+            key=lambda r: ((r['x'] - camera_center_x)**2 + (r['y'] - camera_center_y)**2),
+            reverse=True)
+        get_rect_points.last_camera_pos = camera_pos
+        get_rect_points.last_sorted = rects_srooted
+    else:
+        rects_srooted = get_rect_points.last_sorted
+
     lenghte = len(rects_srooted)
     curent = 0
+
     for rect in rects_srooted:
-        # IF far offscreen, skip
+        # Rest of the cube rendering logic stays the same
         if (rect['x'] < camera['x'] - 6 * TILE_SIZE or rect['x'] > camera['x'] + WINDOW_SIZE[0] + 6 * TILE_SIZE or
-            rect['y'] < camera['y'] - 6 * TILE_SIZE or rect['y'] > camera['y'] + WINDOW_SIZE[1] + 6 * TILE_SIZE): # Large safety buffer
+            rect['y'] < camera['y'] - 6 * TILE_SIZE or rect['y'] > camera['y'] + WINDOW_SIZE[1] + 6 * TILE_SIZE):
             continue
         if not (rect['x'], rect['y']) in neighborscache:
             neighbors = {}
@@ -1063,7 +1139,7 @@ while running:
             neighbors["bottom"] = False
 
             # one for loop to test
-            for other in rects_srooted:
+            """for other in rects_srooted: # o(8000) = O(n)
                 if other == rect:
                     continue
                 if other['x'] == rect['x'] and other['y'] == rect['y'] + TILE_SIZE:
@@ -1074,7 +1150,22 @@ while running:
                 elif other['x'] == rect['x'] + TILE_SIZE and other['y'] == rect['y']:
                     neighbors["right"] = True   
                 elif other['x'] == rect['x'] - TILE_SIZE and other['y'] == rect['y']:
-                    neighbors["left"] = True
+                    neighbors["left"] = True"""
+            # OMG THE SPEEDD!!!!!!!!!!!!!!
+            # o(4) = O(1)
+            # Convert pixel coordinates to grid coordinates for set lookups
+            grid_x = rect['x'] // TILE_SIZE
+            grid_y = rect['y'] // TILE_SIZE
+
+            # Check neighbors using grid coordinates
+            if (grid_x - 1, grid_y) in rectsset:
+                neighbors["left"] = True
+            if (grid_x + 1, grid_y) in rectsset:
+                neighbors["right"] = True
+            if (grid_x, grid_y - 1) in rectsset:
+                neighbors["top"] = True
+            if (grid_x, grid_y + 1) in rectsset:
+                neighbors["bottom"] = True
 
             # Save neighbors to cache
             neighborscache[(rect['x'], rect['y'])] = neighbors
@@ -1084,10 +1175,10 @@ while running:
             neighbors = neighborscache[(rect['x'], rect['y'])]
             #print("did some quickmäth")
 
-        if pygame.key.get_pressed()[pygame.K_F7]:
+        if keys[pygame.K_F7]:
             # print info about every tile's rounded divided by tile size pos and neighbor output
             print(f"Tile at ({round(rect['x'] / TILE_SIZE)}, {round(rect['y'] / TILE_SIZE)}) has neighbors: {neighbors}")
-        if pygame.key.get_pressed()[pygame.K_F8]:
+        if keys[pygame.K_F8]:
             # Print a bunch of spaices to make a spaice
             print("STUFF")
 
@@ -1105,24 +1196,24 @@ while running:
         
         # Define colors for each face
         """colors = {
-            "front": (255, 255, 255),  # White front face
+            "front": (255, 255, 255), # White front face
             "top": (200, 200, 200),     # Light gray top face
-            "bottom": (150, 250, 150),  # Dark gray bottom face
+            "bottom": (150, 250, 150), # Dark gray bottom face
             "left": (100, 100, 100),    # Darker gray left face
             "right": (50, 50, 50)       # Darkest gray right face
         }"""
         # Switc hto a less harsh color scheme, where the main color is (150, 150, 150) and the other colors are variations of it
         colors = {
-            "front": (150, 150, 150),  # Main color for front face
+            "front": (150, 150, 150), # Main color for front face
             "top": (180, 180, 180),     # Lighter gray for top face
-            "bottom": (120, 120, 120),  # Darker gray for bottom face
+            "bottom": (120, 120, 120), # Darker gray for bottom face
             "left": (100, 100, 100),    # Darker gray for left face
             "right": (80, 80, 80)       # Darkest gray for right face
         }
 
         # DEBUG: make all face colors a singl grey color, depending on the progress throug hthe array: last element is white, first is black
         graye = int(255 * (curent / lenghte))
-        if pygame.key.get_pressed()[pygame.K_F1]: colors = {k: (graye, graye, graye) for k in colors.keys()}
+        if keys[pygame.K_F1]: colors = {k: (graye, graye, graye) for k in colors.keys()}
 
         # Now that we know that the fect we are drawing is the furthest away ,we can just draw the sides in any order, because they will be overwrriten correctly
         # also, drwa the one facing the cmaera last so the side faces dont clip it
@@ -1143,7 +1234,7 @@ while running:
         # If the rel pos is above the camera pos, we can see the bottom face because its pointing at us
         # If the rel pos is to the left of the camera pos, we can see the right face because its pointing at us
         def _h():
-            if not pygame.key.get_pressed()[pygame.K_F2]:
+            if not keys[pygame.K_F2]:
                 if pos_rel_camera_xenter < 0 and not neighbors["right"]: # no point in drawing the left face if a neighbor will block it anyway
                     draw_cube_face(screen, rect_points, "right", colors)
                     """# same thing i guess?
@@ -1179,7 +1270,7 @@ while running:
                 else:
                     draw_cube_face(screen, rect_points, "left", DG)
         def _v():
-            if not pygame.key.get_pressed()[pygame.K_F2]:
+            if not keys[pygame.K_F2]:
                 if pos_rel_camera_yenter < 0 and not neighbors["bottom"]: # no point in drawing the top face if a neighbor will block it anyway
                     draw_cube_face(screen, rect_points, "bottom", colors)
                 # If the rel pos is below the camera pos, we can see the top face because its pointing at us
@@ -1198,7 +1289,7 @@ while running:
 
         # If the block is more left / right than up / down, run v THEN h
         # else run h THEN v
-        if not pygame.key.get_pressed()[pygame.K_F6]:
+        if not keys[pygame.K_F6]:
             if abs(pos_rel_camera_xenter) > abs(pos_rel_camera_yenter):
                 _v()
                 _h()
@@ -1206,7 +1297,7 @@ while running:
                 _h()
                 _v()
         # front face
-        if not pygame.key.get_pressed()[pygame.K_F5]:
+        if not keys[pygame.K_F5]:
             draw_cube_face(screen, rect_points, "front", colors)
 
         # hack to fix seam:
@@ -1226,7 +1317,7 @@ while running:
                             TILE_SIZE, TILE_SIZE * 2))"""
             
         # fill in stupid dot
-        if pygame.key.get_pressed()[pygame.K_F3]:
+        if keys[pygame.K_F3]:
             pygame.draw.rect(screen, colors['front'],
                             (rect_points['screen_pos'][0] + TILE_SIZE // 2 - 1,
                             rect_points['screen_pos'][1] + TILE_SIZE // 2 - 1,
@@ -1273,6 +1364,8 @@ while running:
         #                (WINDOW_SIZE[0] // 2, 0),
         #                (WINDOW_SIZE[0] // 2, WINDOW_SIZE[1]), 1)
 
+    # POSITION TWO
+
     # EXTREMELY slowly move stars
     newstars = []
     for star in stars:
@@ -1282,7 +1375,7 @@ while running:
         else:
             color, x, y, distance, size = star
             # Move the star randomly
-            x += random.uniform(-.001, .001) * distance  # Scale movement by distance
+            x += random.uniform(-.001, .001) * distance # Scale movement by distance
             y += random.uniform(-.001, .001) * distance
             # Wrap correctly this time
             wrapped_x = x % (REPEAT_HIDER * WINDOW_SIZE[0] * distance) # MULTIPLYNG BY DISTANCE IS VERY IMPORTANT
@@ -1291,7 +1384,7 @@ while running:
     stars = newstars
 
     # Hold Z to zoom
-    if pygame.key.get_pressed()[pygame.K_z]:
+    if keys[pygame.K_z]:
         # get a rectangle of the screen around the mouse, make sur enot to grab outside it, then replace the screen with it
         # lets say, a WINDOW_SIZE[0] // 2 by WINDOW_SIZE[1] // 2 rectangle
         GROW_FACTOR = 4 # not 2
