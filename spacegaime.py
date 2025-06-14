@@ -1,8 +1,3 @@
-# hello. this code is unmaintainable
-# every time you try to refactor it it fails
-# if yo udecide to do that, and it fails, plese undo and increment this counter as a warning for someone else
-# 
-# total_hours_wasted_here = 13
 
 
 import pygame
@@ -836,17 +831,17 @@ def _add_rect(x, y):
     rects.append({'x': x, 'y': y})
     rectsset.add((x, y)) # Add to set for fast lookup
 # reimplement the hardcoded rects with add redct
-_add_rect(24, 10)
-_add_rect(24, 11)
+_add_rect(0, 0)
+#_add_rect(24, 11)
 
-# TEST: 200 rectangles
+"""# TEST: 200 rectangles
 for tx in range(20):
     for ty in range(10):
         # Calculate position
         x = tx 
         y = ty 
         # Add rectangle
-        _add_rect(x, y)
+        _add_rect(x, y)"""
 
 neighborscache = {} # Cache for neighbor calculations so they dont lag
 
@@ -907,35 +902,24 @@ while running:
     # Fix the cache invalidation in both click handlers by converting grid coords to pixel coords:
 
 # Left click handler:
-    if mouse_buttons[0]: # Left mouse button
-        if not grid_pos_has_block(grid_x, grid_y, rects):
-            #rects.append({'x': grid_x, 'y': grid_y})
-            _add_rect(grid_x, grid_y) # Use the new function to add rects
-            # Convert grid coordinates to pixel coordinates for cache invalidation
-            px = grid_x * TILE_SIZE
-            py = grid_y * TILE_SIZE
-            if (px, py) in neighborscache: del neighborscache[(px, py)]
-            if (px - TILE_SIZE, py) in neighborscache: del neighborscache[(px - TILE_SIZE, py)]
-            if (px + TILE_SIZE, py) in neighborscache: del neighborscache[(px + TILE_SIZE, py)]
-            if (px, py - TILE_SIZE) in neighborscache: del neighborscache[(px, py - TILE_SIZE)]
-            if (px, py + TILE_SIZE) in neighborscache: del neighborscache[(px, py + TILE_SIZE)]
+    # Fix the cache key mismatch:
 
-    # Right click handler:
-    if mouse_buttons[2]: # Right mouse button
-        # Remove any blocks at this position
-        #rects[:] = [r for r in rects if not (r['x'] == grid_x and r['y'] == grid_y)]
+    # In the left click handler:
+    if mouse_buttons[0]:  # Left mouse button
+        if not grid_pos_has_block(grid_x, grid_y, rects):
+            _add_rect(grid_x, grid_y)
+            # Invalidate cache using GRID coordinates
+            # cahce invalidation is spaghetti code
+            neighborscache.clear()
+
+    # And in the right click handler:
+    if mouse_buttons[2]:  # Right mouse button
         if (grid_x, grid_y) in rectsset:
             rectsset.remove((grid_x, grid_y))
-            # This is still expensive
             rects[:] = [r for r in rects if not (r['x'] == grid_x and r['y'] == grid_y)]
-        # Convert grid coordinates to pixel coordinates for cache invalidation
-        px = grid_x * TILE_SIZE
-        py = grid_y * TILE_SIZE
-        if (px, py) in neighborscache: del neighborscache[(px, py)]
-        if (px - TILE_SIZE, py) in neighborscache: del neighborscache[(px - TILE_SIZE, py)]
-        if (px + TILE_SIZE, py) in neighborscache: del neighborscache[(px + TILE_SIZE, py)]
-        if (px, py - TILE_SIZE) in neighborscache: del neighborscache[(px, py - TILE_SIZE)]
-        if (px, py + TILE_SIZE) in neighborscache: del neighborscache[(px, py + TILE_SIZE)]
+            # Invalidate cache using GRID coordinates
+            # well the gen is so fast wthat we can just invalidate the entire cache anyway its too buggy
+            neighborscache.clear()  # Clear the entire cache since we removed a block
 
     # Handle input
     
@@ -1138,6 +1122,23 @@ while running:
             neighbors["top"] = False
             neighbors["bottom"] = False
 
+            # Convert pixel coordinates to grid coordinates for set lookups
+            grid_x = rect['x'] // TILE_SIZE  # This is using PIXEL coordinates 
+            grid_y = rect['y'] // TILE_SIZE  # while cache uses GRID coordinates
+
+            # Check neighbors using grid coordinates
+            if (grid_x - 1, grid_y) in rectsset:
+                neighbors["left"] = True
+            if (grid_x + 1, grid_y) in rectsset:
+                neighbors["right"] = True
+            if (grid_x, grid_y - 1) in rectsset:
+                neighbors["top"] = True
+            if (grid_x, grid_y + 1) in rectsset:
+                neighbors["bottom"] = True
+
+            # Save neighbors to cache using PIXEL coordinates
+            neighborscache[(rect['x'], rect['y'])] = neighbors  # Mismatch here!
+
             # one for loop to test
             """for other in rects_srooted: # o(8000) = O(n)
                 if other == rect:
@@ -1151,7 +1152,7 @@ while running:
                     neighbors["right"] = True   
                 elif other['x'] == rect['x'] - TILE_SIZE and other['y'] == rect['y']:
                     neighbors["left"] = True"""
-            # OMG THE SPEEDD!!!!!!!!!!!!!!
+            """# OMG THE SPEEDD!!!!!!!!!!!!!!
             # o(4) = O(1)
             # Convert pixel coordinates to grid coordinates for set lookups
             grid_x = rect['x'] // TILE_SIZE
@@ -1168,7 +1169,7 @@ while running:
                 neighbors["bottom"] = True
 
             # Save neighbors to cache
-            neighborscache[(rect['x'], rect['y'])] = neighbors
+            neighborscache[(rect['x'], rect['y'])] = neighbors"""
             #print("did some complciated math")
         else:
             # Use cached neighbors
