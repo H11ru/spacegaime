@@ -20,7 +20,7 @@ MOVEMENT_SPEED_NORM = 5
 MOVEMENT_SPEED_FAST = 2
 MOVEMENT_SPEED_DBUG = 6
 MOVEMENT_SPEED_SLOW = 0.25
-RETURN_SPEED = 0.1 # Higher value = faster return to origin
+RETURN_SPEED = 0.1 # Higher value = faster return to originf
 MIN_DISTANCE = 1e-7
 
 # Setup display
@@ -845,7 +845,7 @@ rectsset = set()
 #rects.append({'x': 24, 'y':  11})
 def _add_rect(x, y):
     """Add a rectangle at the given grid position and expand bounds to include it with screen buffer"""
-    rects.append({'x': x, 'y': y})
+    rects.append({'x': x, 'y': y, 'type': 'block'})
     rectsset.add((x, y))
 
     # Update bounds - these represent the furthest points where blocks are visible
@@ -865,7 +865,8 @@ def _add_rect(x, y):
 
     used_area_bounds_pluS_screen_size = (min_x, min_y, max_x, max_y)
 
-_add_rect(0, 0)
+rects.append({'x': 0, 'y':  0, 'type': 'anchor'}) # Anch charm
+rectsset.add((0, 0)) # Anchor rect for referein setnce
 #_add_rect(24, 11)
 
 """# TEST: 200 rectangles
@@ -965,7 +966,7 @@ for x in range(int(start_x), int(end_x), TILE_SIZE):
 for x in range(int(start_x), int(end_x), TILE_SIZE):
     screen_x = x - camera['x']
     pygame.draw.line(grid_surface, (0, 255, 0, 128/2),
-                    (screen_x , -1),
+                    (screen_x, -1),
                     (screen_x , WINDOW_SIZE[1]-1+ TILE_SIZE+ TILE_SIZE), 3)
 # Draw horizontal lines
 for y in range(int(start_y), int(end_y), TILE_SIZE):
@@ -974,7 +975,7 @@ for y in range(int(start_y), int(end_y), TILE_SIZE):
                     (0, screen_y),
                     (WINDOW_SIZE[0]+ TILE_SIZE+ TILE_SIZE, screen_y), 3)
     
-# smooller bloom (same but darker and larger radius)
+# smooller bloom (same but darker and larger radiu
 for x in range(int(start_x), int(end_x), TILE_SIZE):
     for y in range(int(start_y), int(end_y), TILE_SIZE):
         screen_x = x - camera['x'] + 1
@@ -990,7 +991,7 @@ for x in range(int(start_x), int(end_x), TILE_SIZE):
                     (screen_x, 0),
                     (screen_x, WINDOW_SIZE[1]+ TILE_SIZE+ TILE_SIZE), 1)
     #print("Screen x:", screen_x)
-
+warning_thing = 0, ""
 for y in range(int(start_y), int(end_y), TILE_SIZE):
     screen_y = y - camera['y']
     pygame.draw.line(grid_surface, (0, 255, 0, 255/2),
@@ -1007,7 +1008,16 @@ for x in range(int(start_x), int(end_x), TILE_SIZE):
         pygame.draw.circle(grid_surface, (0, 255, 0, 255/2), (screen_x, screen_y-1), 2)
         pygame.draw.circle(grid_surface, (0, 255, 0, 255/2), (screen_x-1, screen_y-1), 2)
 # Blit the grid surface to the screen
-
+def flood_fill(x, y):
+    """Flood fill algorithm to remove all blocks not connected to the anchor"""
+    if (x, y) in flooded or not grid_pos_has_block(x, y, rects):
+        return
+    flooded.add((x, y))
+    # Check neighbors
+    flood_fill(x + 1, y)
+    flood_fill(x - 1, y)
+    flood_fill(x, y + 1)
+    flood_fill(x, y - 1)
     #print("Screen y:", screen_y)
 emptimer = 0
 running = True
@@ -1040,21 +1050,72 @@ while running:
     # Fix the cache key mismatch:
 
     # In the left click handler:
-    if mouse_buttons[0]:  # Left mouse button
+    if mouse_buttons[0]:  # Left mouse button Click4Bait
         if not grid_pos_has_block(grid_x, grid_y, rects):
-            _add_rect(grid_x, grid_y)
-            # Invalidate cache using GRID coordinates
-            # cahce invalidation is spaghetti code
-            neighborscache.clear()
+            # only if adjacnt to an existing block: remmeber we dont need to check if its connected to anchor becuse any other block it could be next to is already connected
+            if grid_pos_has_block(grid_x + 1, grid_y, rects) or \
+               grid_pos_has_block(grid_x - 1, grid_y, rects) or \
+               grid_pos_has_block(grid_x, grid_y + 1, rects) or \
+               grid_pos_has_block(grid_x, grid_y - 1, rects):
+                _add_rect(grid_x, grid_y)
+                # Invalidate cache using GRID coordinates
+                # cahce invalidation is spaghetti code
+                neighborscache.clear()
+
 
     # And in the right click handler:
     if mouse_buttons[2]:  # Right mouse button
-        if (grid_x, grid_y) in rectsset:
-            rectsset.remove((grid_x, grid_y))
-            rects[:] = [r for r in rects if not (r['x'] == grid_x and r['y'] == grid_y)]
-            # Invalidate cache using GRID coordinates
-            # well the gen is so fast wthat we can just invalidate the entire cache anyway its too buggy
-            neighborscache.clear()  # Clear the entire cache since we removed a block
+        if grid_x == 0 and grid_y == 0:
+            # Cannot remove anchor
+            pass
+        else:
+            if (grid_x, grid_y) in rectsset:
+                if keys[pygame.K_LALT]:
+                    rectsset.remove((grid_x, grid_y))
+                    rects[:] = [r for r in rects if not (r['x'] == grid_x and r['y'] == grid_y)]
+                    # Invalidate cache using GRID coordinates
+                    # well the gen is so fast wthat we can just invalidate the entire cache anyway its too buggy
+                    # Oops! all blocks not connected to the anchor by orhognally neiighbors died
+                    # flood fill
+                    flooded = set()
+                    
+                    # Start flood fill from the anchor position (0, 0)
+                    flood_fill(0, 0)
+                    # delete non floody
+                    rects[:] = [r for r in rects if (r['x'], r['y']) in flooded or (r['x'] == 0 and r['y'] == 0)]
+                    # sets and neighbor dat ais now garbage
+                    rectsset.clear()  # Clear the set
+                    for r in rects:
+                        rectsset.add((r['x'], r['y']))
+                    neighborscache.clear()  # Clear the entire cache since we removed a block
+                else:
+                    # only remove if it doesnt disconnect something else, by flood filling a copy wher eit doesnt exist and if something is left over, cancel
+                    temp_rects = rects[:]
+                    temp_rectsset = rectsset.copy()
+                    # Remove the block from the temporary list
+                    temp_rectsset.remove((grid_x, grid_y))
+                    flooded = set()
+                    oldoid_rectsset = rectsset.copy()  # Save the original set for comparison
+                    rectsset = temp_rectsset  # Temporarily use the modified set
+                    flood_fill(0, 0)
+                    # Restore the original set
+                    rectsset = oldoid_rectsset  # Restore the original set
+                    # Print the flooded set for debugging
+                    #print("Flooded set:", flooded)
+                    # THign
+                    flooded.add((grid_x, grid_y))  # Add the block being removed to the flooded set so that the comparison isnt BOKEN
+                    # check if theres anythin thtas not flooded
+                    if flooded == rectsset: # check if the sets are equal
+                        # If not, we can remove the block
+                        rectsset.remove((grid_x, grid_y))
+                        rects[:] = [r for r in rects if not (r['x'] == grid_x and r['y'] == grid_y)]
+                        # Invalidate cache using GRID coordinates
+                        neighborscache.clear()
+                    else:
+                        # WARNING
+                        warning_thing = 20, f"Didn't remove block because it would disconnect something. Hold ALT to remove it and anything connected anyway."
+
+    # Draw the grid surface
 
     # Handle input
     
@@ -1082,7 +1143,15 @@ while running:
         for zx in range(-30, 31):
             for zy in range(-20, 21):
                 if random.randint(0, 1) == 0:
-                    rects.append({'x': zx, 'y': zy})
+                    rects.append({'x': zx, 'y': zy, 'type': 'block'})
+        # FIX the anchor
+        if any(r['x'] == 0 and r['y'] == 0 for r in rects):
+            rects.remove({'x': 0, 'y': 0, 'type': 'block'})
+        rects.append({'x': 0, 'y': 0, 'type': 'anchor'})
+        # fix set
+        rectsset.clear()  # Clear the set
+        for r in rects:
+            rectsset.add((r['x'], r['y']))
         # cache invalidation
         neighborscache.clear()
 
@@ -1232,7 +1301,7 @@ while running:
                 py < camera['y'] - 6 * TILE_SIZE or 
                 py > camera['y'] + WINDOW_SIZE[1] + 6 * TILE_SIZE):
                 continue
-            visible_blocks.append({'x': px, 'y': py})
+            visible_blocks.append({'x': px, 'y': py, 'type': rect['type']})
         
         # Sort only visible blocks
         rects_srooted = sorted(visible_blocks, 
@@ -1341,12 +1410,26 @@ while running:
         }"""
         # Switc hto a less harsh color scheme, where the main color is (150, 150, 150) and the other colors are variations of it
         colors = {
-            "front": (150, 150, 150), # Main color for front face
-            "top": (180, 180, 180),     # Lighter gray for top face
-            "bottom": (120, 120, 120), # Darker gray for bottom face
-            "left": (100, 100, 100),    # Darker gray for left face
-            "right": (80, 80, 80)       # Darkest gray for right face
+            "block": {
+                "front": (150, 150, 150), # Main color for front face
+                "top": (180, 180, 180),     # Lighter gray for top face
+                "bottom": (120, 120, 120), # Darker gray for bottom face
+                "left": (100, 100, 100),    # Darker gray for left face
+                "right": (80, 80, 80)       # Darkest gray for right face
+            },
+            "anchor": {
+                "front": (255, 0, 0), # Red front face for anchor
+                "top": (200, 0, 0),     # Darker red top face for anchor
+                "bottom": (150, 0, 0), # Even darker red bottom face for anchor
+                "left": (100, 0, 0),    # Darker red left face for anchor
+                "right": (50, 0, 0)       # Darkest red right face for anchor
+            }
         }
+        if not "type" in rect:
+            print("FATAL RECT EDETCTE:E: : FIRE OIN the " + str(rect))
+            raise SystemError
+        colors = colors[rect['type']]  # Use the type of the rect to get the correct color scheme
+
 
         # DEBUG: make all face colors a singl grey color, depending on the progress throug hthe array: last element is white, first is black
         graye = int(255 * (curent / lenghte))
@@ -1567,6 +1650,12 @@ while running:
         fcamera['y'] > used_area_bounds_pluS_screen_size[3] * TILE_SIZE):
         #realscreen.blit(founte.render("You are too far away from the blocks!", True, (255, 0, 0)), (10, 30)) # Too aggressive
         realscreen.blit(founte.render("Lost in space? You can press SPACE to go back.", True, (255, 0, 0)), (10, 30)) # helöpfupl
+
+    # warning thing
+    if warning_thing[0] > 0:
+        realscreen.blit(founte.render(warning_thing[1], True, (255, 0, 0)), (WINDOW_SIZE[0] // 2 - (founte.size(warning_thing[1])[0] // 2), WINDOW_SIZE[1] // 2 - founte.size(warning_thing[1])[1] // 2))
+        warning_thing = (warning_thing[0] - 1, warning_thing[1])
+
     #print(times)
     pygame.display.flip()
 
