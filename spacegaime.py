@@ -13,7 +13,7 @@ nonrueguwh997h3qHARHHohfow = (76, 76, 76) # what was this color again?
 pygame.init()
 
 # Constants
-WINDOW_SIZE = (800, 600)
+WINDOW_SIZE = (960, 540) # This is a bapple
 TILE_SIZE = 50
 CAMERA_FRICTION = 0.8
 MOVEMENT_SPEED_NORM = 5
@@ -24,7 +24,21 @@ RETURN_SPEED = 0.1 # Higher value = faster return to origin
 MIN_DISTANCE = 1e-7
 
 # Setup display
-screen = pygame.display.set_mode(WINDOW_SIZE)
+screen = pygame.Surface(WINDOW_SIZE)
+# import a module to find the monitor size so we can scale up the window if the monitor supports it
+import screeninfo
+monitor = screeninfo.get_monitors()[0]  # Get the primary monitor
+width, height = monitor.width, monitor.height
+
+scale = min(width / WINDOW_SIZE[0], height / WINDOW_SIZE[1])
+scale = int(scale)
+if scale < 1:
+    print("WHAT")
+else:
+    print("going with size", scale, "for the window")
+    print("cant go with ", scale+1, "because that size, (" + str(WINDOW_SIZE[0] * (scale + 1)) + ", " + str(WINDOW_SIZE[1] * (scale + 1)) + ") is bigger than the monitor size (" + str(width) + ", " + str(height) + ")")
+
+realscreen = pygame.display.set_mode((WINDOW_SIZE[0] * scale, WINDOW_SIZE[1] * scale), pygame.RESIZABLE)
 clock = pygame.time.Clock()
 
 # Camera state
@@ -702,7 +716,10 @@ def parallax_stars(screen, camera):
             continue
 # Set up the camera
 
-
+used_area_bounds_pluS_screen_size = (-WINDOW_SIZE[0] // TILE_SIZE - 5,
+                                     -WINDOW_SIZE[1] // TILE_SIZE - 5,
+                                     WINDOW_SIZE[0] // TILE_SIZE + 5,
+                                     WINDOW_SIZE[1] // TILE_SIZE + 5)
 
 test_texture = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
 # Draw a uv map on the text texture
@@ -827,10 +844,27 @@ rectsset = set()
 #rects.append({'x': 24, 'y':  10})
 #rects.append({'x': 24, 'y':  11})
 def _add_rect(x, y):
-    """Add a rectangle at the given grid position"""
+    """Add a rectangle at the given grid position and expand bounds to include it with screen buffer"""
     rects.append({'x': x, 'y': y})
-    rectsset.add((x, y)) # Add to set for fast lookup
-# reimplement the hardcoded rects with add redct
+    rectsset.add((x, y))
+
+    # Update bounds - these represent the furthest points where blocks are visible
+    # We need to account for:
+    # 1. Grid position of block
+    # 2. Screen size (so player can see blocks from WINDOW_SIZE distance away)
+    # 3. Extra buffer for perspective/visual effects
+    global used_area_bounds_pluS_screen_size
+    min_x, min_y, max_x, max_y = used_area_bounds_pluS_screen_size
+
+    # Expand bounds if new block is outside current bounds
+    # The -/+ WINDOW_SIZE//TILE_SIZE terms ensure we include blocks visible from screen edges
+    min_x = min(min_x, x - WINDOW_SIZE[0]//TILE_SIZE - 5) 
+    min_y = min(min_y, y - WINDOW_SIZE[1]//TILE_SIZE - 5)
+    max_x = max(max_x, x + WINDOW_SIZE[0]//TILE_SIZE + 5)
+    max_y = max(max_y, y + WINDOW_SIZE[1]//TILE_SIZE + 5)
+
+    used_area_bounds_pluS_screen_size = (min_x, min_y, max_x, max_y)
+
 _add_rect(0, 0)
 #_add_rect(24, 11)
 
@@ -849,7 +883,7 @@ def grid_pos_has_block(grid_x, grid_y, rects):
     """Check if there's already a block at the given grid position"""
     #return any(r['x'] == grid_x and r['y'] == grid_y for r in rects) # Old
     return (grid_x, grid_y) in rectsset # New
-
+"""
 # test endgame space base: 8000 blocks
 while len(rects) < 8000:
     print(f"Progressez: {len(rects)/80}%") if len(rects) % 1000 == 0 else None
@@ -860,7 +894,7 @@ while len(rects) < 8000:
     # Check if this position already has a block
     if not grid_pos_has_block(grid_x, grid_y, rects):
         #rects.append({'x': grid_x, 'y': grid_y})
-        _add_rect(grid_x, grid_y)
+        _add_rect(grid_x, grid_y)"""
 
 
 def screen_to_grid(screen_x, screen_y, camera):
@@ -880,11 +914,107 @@ def grid_pos_has_block(grid_x, grid_y, rects):
     #return any(r['x'] == grid_x and r['y'] == grid_y for r in rects)
     return (grid_x, grid_y) in rectsset # Use the set for fast lookup
 
-camera = fcamera # for now
+camera = {'x': 0, 'y': 0} # Camera position in world coordinates
+
+grid_surface = pygame.Surface([WINDOW_SIZE[0] + TILE_SIZE * 2,
+                               WINDOW_SIZE[1] + TILE_SIZE * 2], pygame.SRCALPHA)
+grid_surface.convert_alpha() # For whatever reason this bost fps
+# Draw grid aligned to world coordinates
+# Calculate grid bounds that cover the visible area
+start_x = (camera['x'] // TILE_SIZE) * TILE_SIZE
+end_x = start_x + WINDOW_SIZE[0] + TILE_SIZE + TILE_SIZE+ TILE_SIZE
+start_y = (camera['y'] // TILE_SIZE) * TILE_SIZE  
+end_y = start_y + WINDOW_SIZE[1] + TILE_SIZE+ TILE_SIZE+ TILE_SIZE
+
+# Draw vertical lines
+for x in range(int(start_x), int(end_x), TILE_SIZE):
+    screen_x = x - camera['x']
+    pygame.draw.line(grid_surface, (0, 255, 0, 16/2),
+                    (screen_x , -1),
+                    (screen_x , WINDOW_SIZE[1]-1+ TILE_SIZE+ TILE_SIZE), 9)
+# Draw horizontal lines
+for y in range(int(start_y), int(end_y), TILE_SIZE):
+    screen_y = y - camera['y']
+    pygame.draw.line(grid_surface, (0, 255, 0, 16/2),
+                    (0, screen_y),
+                    (WINDOW_SIZE[0] + TILE_SIZE+ TILE_SIZE, screen_y), 9)
+
+# Draw vertical lines
+for x in range(int(start_x), int(end_x), TILE_SIZE):
+    screen_x = x - camera['x']
+    pygame.draw.line(grid_surface, (0, 255, 0, 64/2),
+                    (screen_x , -1),
+                    (screen_x , WINDOW_SIZE[1]-1+ TILE_SIZE+ TILE_SIZE), 5)
+# Draw horizontal lines
+for y in range(int(start_y), int(end_y), TILE_SIZE):
+    screen_y = y - camera['y']
+    pygame.draw.line(grid_surface, (0, 255, 0, 64/2),
+                    (0, screen_y),
+                    (WINDOW_SIZE[0]+ TILE_SIZE+ TILE_SIZE, screen_y), 5)
+# smooller bloom (same but darker and larger radius)
+for x in range(int(start_x), int(end_x), TILE_SIZE):
+    for y in range(int(start_y), int(end_y), TILE_SIZE):
+        screen_x = x - camera['x'] + 1
+        screen_y = y - camera['y'] + 1
+        pygame.draw.circle(grid_surface, (0, 255, 0, 64/2), (screen_x, screen_y), 5)
+        pygame.draw.circle(grid_surface, (0, 255, 0, 64/2), (screen_x-1, screen_y), 5)
+        pygame.draw.circle(grid_surface, (0, 255, 0, 64/2), (screen_x, screen_y-1), 5)
+        pygame.draw.circle(grid_surface, (0, 255, 0, 64/2), (screen_x-1, screen_y-1), 5)
+
+# Draw vertical lines
+for x in range(int(start_x), int(end_x), TILE_SIZE):
+    screen_x = x - camera['x']
+    pygame.draw.line(grid_surface, (0, 255, 0, 128/2),
+                    (screen_x , -1),
+                    (screen_x , WINDOW_SIZE[1]-1+ TILE_SIZE+ TILE_SIZE), 3)
+# Draw horizontal lines
+for y in range(int(start_y), int(end_y), TILE_SIZE):
+    screen_y = y - camera['y']
+    pygame.draw.line(grid_surface, (0, 255, 0, 128/2),
+                    (0, screen_y),
+                    (WINDOW_SIZE[0]+ TILE_SIZE+ TILE_SIZE, screen_y), 3)
+    
+# smooller bloom (same but darker and larger radius)
+for x in range(int(start_x), int(end_x), TILE_SIZE):
+    for y in range(int(start_y), int(end_y), TILE_SIZE):
+        screen_x = x - camera['x'] + 1
+        screen_y = y - camera['y'] + 1
+        pygame.draw.circle(grid_surface, (0, 255, 0, 128/2), (screen_x, screen_y), 3)
+        pygame.draw.circle(grid_surface, (0, 255, 0, 128/2), (screen_x-1, screen_y), 3)
+        pygame.draw.circle(grid_surface, (0, 255, 0, 128/2), (screen_x, screen_y-1), 3)
+        pygame.draw.circle(grid_surface, (0, 255, 0, 128/2), (screen_x-1, screen_y-1), 3)
+
+for x in range(int(start_x), int(end_x), TILE_SIZE):
+    screen_x = x - camera['x']
+    pygame.draw.line(grid_surface, (0, 255, 0, 255/2), 
+                    (screen_x, 0),
+                    (screen_x, WINDOW_SIZE[1]+ TILE_SIZE+ TILE_SIZE), 1)
+    #print("Screen x:", screen_x)
+
+for y in range(int(start_y), int(end_y), TILE_SIZE):
+    screen_y = y - camera['y']
+    pygame.draw.line(grid_surface, (0, 255, 0, 255/2),
+                    (0, screen_y),
+                    (WINDOW_SIZE[0]+ TILE_SIZE+ TILE_SIZE, screen_y), 1)
+# bloom at the intersections so it looks like its glowing
+# because theres two beams itnersecting = more liguht
+for x in range(int(start_x), int(end_x), TILE_SIZE):
+    for y in range(int(start_y), int(end_y), TILE_SIZE):
+        screen_x = x - camera['x'] + 1
+        screen_y = y - camera['y'] + 1
+        pygame.draw.circle(grid_surface, (0, 255, 0, 255/2), (screen_x, screen_y), 2)
+        pygame.draw.circle(grid_surface, (0, 255, 0, 255/2), (screen_x-1, screen_y), 2)
+        pygame.draw.circle(grid_surface, (0, 255, 0, 255/2), (screen_x, screen_y-1), 2)
+        pygame.draw.circle(grid_surface, (0, 255, 0, 255/2), (screen_x-1, screen_y-1), 2)
+# Blit the grid surface to the screen
+
+    #print("Screen y:", screen_y)
 emptimer = 0
 running = True
 times = [10] # placeholder
+feetdash = 0
 while running:
+    feetdash += 1
     keys = pygame.key.get_pressed()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -892,12 +1022,17 @@ while running:
     emptimer -= 1
     if random.randint(1, 487) == 24:
         emptimer = 73
+    # ...existing code...
     mouse_buttons = pygame.mouse.get_pressed()
     mouse_pos = list(pygame.mouse.get_pos())
-    mouse_pos[0] -= TILE_SIZE / 2 # Center the mouse on the tile
+    # Adjust mouse coordinates for screen scaling
+    mouse_pos[0] = mouse_pos[0] / scale
+    mouse_pos[1] = mouse_pos[1] / scale
+    mouse_pos[0] -= TILE_SIZE / 2 # Center the mouse on the tile 
     mouse_pos[1] -= TILE_SIZE / 2 # Center the mouse on the tile
     # Convert mouse position to grid coordinates
     grid_x, grid_y = screen_to_grid(mouse_pos[0], mouse_pos[1], camera)
+# ...existing code...
     
     # Fix the cache invalidation in both click handlers by converting grid coords to pixel coords:
 
@@ -961,10 +1096,10 @@ while running:
         fcamera['tx'] += MOVEMENT_SPEED
 
     # Camera return to origin
-    if keys[pygame.K_SPACE]:
+    if keys[pygame.K_SPACE] or feetdash == 1:
         # Go to origin
-        fcamera["tx"] = 0
-        fcamera["ty"] = 0
+        fcamera["tx"] = -WINDOW_SIZE[0] // 2 + TILE_SIZE // 2
+        fcamera["ty"] = -WINDOW_SIZE[1] // 2 + TILE_SIZE // 2
 
     # Apply camera physics
     fcamera["x"] = fcamera["x"] * CAMERA_FRICTION + fcamera["tx"] * (1 - CAMERA_FRICTION)
@@ -1065,6 +1200,7 @@ while running:
         while keys[pygame.K_F10]:
             for event in pygame.event.get(pygame.QUIT):
                 running = False
+            keys = pygame.key.get_pressed()
     if keys[pygame.K_F11]:
         # reload cache
         neighborscache.clear()
@@ -1391,6 +1527,11 @@ while running:
         GROW_FACTOR = 4 # not 2
         # if its outside, just push it in
         mouse_x, mouse_y = pygame.mouse.get_pos()
+        # clamp
+        LEFT_BUFFER = WINDOW_SIZE[0] // (GROW_FACTOR * 2)
+        TOP_BUFFER = WINDOW_SIZE[1] // (GROW_FACTOR * 2)
+        mouse_x = max(LEFT_BUFFER, min(WINDOW_SIZE[0] - LEFT_BUFFER, mouse_x))
+        mouse_y = max(TOP_BUFFER, min(WINDOW_SIZE[1] - TOP_BUFFER, mouse_y))
         zoom_rect = pygame.Rect(
             max(0, mouse_x - WINDOW_SIZE[0] // (GROW_FACTOR * 2)),
             max(0, mouse_y - WINDOW_SIZE[1] // (GROW_FACTOR * 2)),
@@ -1404,7 +1545,28 @@ while running:
         # Blit the zoomed surface to the screen
         screen.blit(zoomed_surf, (0, 0))
 
-    screen.blit(founte.render("FPS: " + str(round(sum(times)/len(times))), True, (255, 255, 255)), (10, 10));times = times[max(0, len(times)-59):] + [(1000 / clock.tick(60))]
+        # Shift to draw block grid
+    if keys[pygame.K_LSHIFT]:
+
+        #print("Drawing the grid")
+        # Gee-pee-you
+        # (GPU)
+        # by making it convert alpha
+        # i guess
+
+        screen.blit(grid_surface, (-TILE_SIZE  -camera['x'] % (TILE_SIZE),-TILE_SIZE   -camera['y'] % (TILE_SIZE)))
+
+    realscreen.blit(pygame.transform.scale(screen, (WINDOW_SIZE[0] * scale, WINDOW_SIZE[1] * scale)), (0, 0))
+    # Draw stars
+    realscreen.blit(founte.render("FPS: " + str(round(sum(times)/len(times))), True, (255, 255, 255)), (10, 10));times = times[max(0, len(times)-59):] + [(1000 / clock.tick(60))]
+
+    # Help, if camera is far away from the blocks, then add a help mesasge. this is done using the used_area_bounds_pluS_screen_size
+    if (fcamera['x'] < used_area_bounds_pluS_screen_size[0] * TILE_SIZE or 
+        fcamera['x'] > used_area_bounds_pluS_screen_size[2] * TILE_SIZE or
+        fcamera['y'] < used_area_bounds_pluS_screen_size[1] * TILE_SIZE or 
+        fcamera['y'] > used_area_bounds_pluS_screen_size[3] * TILE_SIZE):
+        #realscreen.blit(founte.render("You are too far away from the blocks!", True, (255, 0, 0)), (10, 30)) # Too aggressive
+        realscreen.blit(founte.render("Lost in space? You can press SPACE to go back.", True, (255, 0, 0)), (10, 30)) # helöpfupl
     #print(times)
     pygame.display.flip()
 
