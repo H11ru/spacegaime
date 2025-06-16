@@ -1,32 +1,56 @@
-
-
-import pygame
 import math
 import random
-import numpy as np # For matrix operations
+
+import numpy as np
+import pygame
+import screeninfo
 
 
-triangular_magic = 25872391 # ???
-trhia_m_flag = 0b100 | 0b100000 # what did thsi do
-nonrueguwh997h3qHARHHohfow = (76, 76, 76) # what was this color again?
 # Initialize Pygame
 pygame.init()
 
 # Constants
 WINDOW_SIZE = (960, 540) # This is a bapple
 TILE_SIZE = 50
-CAMERA_FRICTION = 0.8
-MOVEMENT_SPEED_NORM = 5
-MOVEMENT_SPEED_FAST = 2
-MOVEMENT_SPEED_DBUG = 6
-MOVEMENT_SPEED_SLOW = 0.25
-RETURN_SPEED = 0.1 # Higher value = faster return to originf
-MIN_DISTANCE = 1e-7
+CAMERA_FRICTION = 0.8 # Friction applied to camera movement (Higher value = more friction, lower = less friction)
+MOVEMENT_SPEED_NORM = 5 # Velocity of the camera when moving normally
+MOVEMENT_SPEED_FAST = 2 # Velocity multiplier when holding shift
+MOVEMENT_SPEED_DBUG = 6 # Velocity multiplier when holding debug key
+MOVEMENT_SPEED_SLOW = 0.25 # Velocity multiplier when holding slow key
+MIN_DISTANCE = 1e-7 # Minimum distance to consider the camera at the target position
+
+# Weird color
+outline_color = (76, 76, 76)
+
+# Animation state
+block_animations = {}  # (x,y) -> current_scale where 0.0 is start and 1.0 is full size
+ANIMATION_SPEED = 0.1  # How much the scale increases per frame
+
+def get_block_scale(x, y):
+    """Get the current scale of a block for animation"""
+    if (x, y) not in block_animations:
+        return 1.0
+    
+    anim = block_animations[(x, y)]
+    current_time = pygame.time.get_ticks()
+    elapsed = (current_time - anim['time']) / 1000.0  # Convert to seconds
+    
+    if anim['type'] == 'add':
+        # For adding blocks, scale from 0 to 1
+        scale = min(1.0, elapsed / ANIMATION_SPEED)
+        if scale >= 1.0:
+            del block_animations[(x, y)]
+        return scale
+    else:  # remove
+        # For removing blocks, scale from 1 to 0
+        scale = max(0.0, 1.0 - (elapsed / ANIMATION_SPEED))
+        if scale <= 0.0:
+            del block_animations[(x, y)]
+        return scale
 
 # Setup display
 screen = pygame.Surface(WINDOW_SIZE)
 # import a module to find the monitor size so we can scale up the window if the monitor supports it
-import screeninfo
 monitor = screeninfo.get_monitors()[0]  # Get the primary monitor
 width, height = monitor.width, monitor.height
 
@@ -669,7 +693,7 @@ def parallax_stars(screen, camera):
             # Filter out illegal chars (all control chars except \n and spaces) and replace them with ÿ (for no particular reason)
             GREEBLOR = ''.join(c if c.isprintable() or c in ('\n', ' ') else 'ÿ' for c in GREEBLOR)
             # boop: slightly weird
-            boop = "NH-4b : 4.27ly"
+            boop = "The sun : 3ly"
             # pick a random char and switch it with a different char
             boop_index1 = random.randint(0, len(boop) - 1)
             boop_index2 = random.randint(0, len(boop) - 1)
@@ -678,7 +702,7 @@ def parallax_stars(screen, camera):
             i1_char = boop[boop_index1]
             boop = boop[:boop_index1] + boop[boop_index2] + boop[boop_index1 + 1:]
             boop = boop[:boop_index2] + i1_char + boop[boop_index2 + 1:]
-            normalish = "NH-4b : 4.27ly" if not random.randint(0, 9) == 3 else boop
+            normalish = "The sun : 3ly" if not random.randint(0, 11) == 3 else boop
             text = founte.render(normalish if not critical_error else GREEBLOR, True, green5)
             screen.blit(text, (wrapped_x - rad * 3, wrapped_y - rad * 2.5 - 20))
             # Transparant mesh
@@ -830,7 +854,6 @@ def testdraw(surf, tex, quad_points):
 
     # Draw result
     surf.blit(temp, (min_x, min_y))
-
 
 
 
@@ -1061,6 +1084,15 @@ while running:
                 # Invalidate cache using GRID coordinates
                 # cahce invalidation is spaghetti code
                 neighborscache.clear()
+                # animationoid!!!!!!
+                block_animations[(grid_x, grid_y)] = {
+                    'type': 'add',
+                    'position': (grid_x, grid_y),
+                    'time': pygame.time.get_ticks()
+                }
+            else:
+                # WARNING
+                warning_thing = 20, f"Cannot place block here. Must be adjacent to an existing block."
 
 
     # And in the right click handler:
@@ -1075,8 +1107,6 @@ while running:
                     rects[:] = [r for r in rects if not (r['x'] == grid_x and r['y'] == grid_y)]
                     # Invalidate cache using GRID coordinates
                     # well the gen is so fast wthat we can just invalidate the entire cache anyway its too buggy
-                    # Oops! all blocks not connected to the anchor by orhognally neiighbors died
-                    # flood fill
                     flooded = set()
                     
                     # Start flood fill from the anchor position (0, 0)
@@ -1088,6 +1118,14 @@ while running:
                     for r in rects:
                         rectsset.add((r['x'], r['y']))
                     neighborscache.clear()  # Clear the entire cache since we removed a block
+                    # animationoid!!!!!!
+                    block_animations[(grid_x, grid_y)] = {
+                        'type': 'remove',
+                        'position': (grid_x, grid_y),
+                        'time': pygame.time.get_ticks()
+                    }
+
+
                 else:
                     # only remove if it doesnt disconnect something else, by flood filling a copy wher eit doesnt exist and if something is left over, cancel
                     temp_rects = rects[:]
@@ -1111,6 +1149,12 @@ while running:
                         rects[:] = [r for r in rects if not (r['x'] == grid_x and r['y'] == grid_y)]
                         # Invalidate cache using GRID coordinates
                         neighborscache.clear()
+                        # animationoid!!!!!!
+                        block_animations[(grid_x, grid_y)] = {
+                            'type': 'remove',
+                            'position': (grid_x, grid_y),
+                            'time': pygame.time.get_ticks()
+                        }
                     else:
                         # WARNING
                         warning_thing = 20, f"Didn't remove block because it would disconnect something. Hold ALT to remove it and anything connected anyway."
@@ -1155,6 +1199,11 @@ while running:
         # cache invalidation
         neighborscache.clear()
 
+    # Camera return to origin
+    if keys[pygame.K_SPACE] or feetdash == 1:
+        # Go to origin
+        fcamera["tx"] = -WINDOW_SIZE[0] // 2 + TILE_SIZE // 2
+        fcamera["ty"] = -WINDOW_SIZE[1] // 2 + TILE_SIZE // 2
     if keys[pygame.K_w]:
         fcamera['ty'] -= MOVEMENT_SPEED
     if keys[pygame.K_s]:
@@ -1164,11 +1213,6 @@ while running:
     if keys[pygame.K_d]:
         fcamera['tx'] += MOVEMENT_SPEED
 
-    # Camera return to origin
-    if keys[pygame.K_SPACE] or feetdash == 1:
-        # Go to origin
-        fcamera["tx"] = -WINDOW_SIZE[0] // 2 + TILE_SIZE // 2
-        fcamera["ty"] = -WINDOW_SIZE[1] // 2 + TILE_SIZE // 2
 
     # Apply camera physics
     fcamera["x"] = fcamera["x"] * CAMERA_FRICTION + fcamera["tx"] * (1 - CAMERA_FRICTION)
@@ -1237,7 +1281,7 @@ while running:
             x, y = points['screen_pos']
             pygame.draw.rect(screen, colors[face_type],
                             (x - TILE_SIZE//2, y - TILE_SIZE//2, TILE_SIZE, TILE_SIZE))
-            pygame.draw.rect(screen, nonrueguwh997h3qHARHHohfow,
+            pygame.draw.rect(screen, outline_color,
                             (x - TILE_SIZE//2 , y - TILE_SIZE//2, TILE_SIZE, TILE_SIZE),4) # Simple shrink
         else:
             face_points = calculate_face_points(points, face_type)
@@ -1260,7 +1304,7 @@ while running:
                     face_points[i] = (face_points[i][0] - vec[0], face_points[i][1] - vec[1])
 
                 # draw outline
-                pygame.draw.polygon(screen, nonrueguwh997h3qHARHHohfow, face_points,5) # Draw outline to hide the horrible seams
+                pygame.draw.polygon(screen, outline_color, face_points,5) # Draw outline to hide the horrible seams
 
 
     # Pause tool
@@ -1293,7 +1337,7 @@ while running:
     # Only resort if camera moved
     if camera_pos != getattr(get_rect_points, 'last_camera_pos', None):
         visible_blocks = []
-        for rect in rects:
+        for rect in rects:  
             px = rect['x'] * TILE_SIZE
             py = rect['y'] * TILE_SIZE
             if (px < camera['x'] - 6 * TILE_SIZE or 
